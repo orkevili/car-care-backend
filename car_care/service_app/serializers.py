@@ -1,7 +1,7 @@
 from .models import Vehicle, Service, Part, ServicePart, User
 from typing import Iterable, List, Dict, Any
 
-def serialize_services(users: Iterable[User]) -> List[Dict[str, Any]]:
+def serialize_users(users: Iterable[User]) -> List[Dict[str, Any]]:
     data = []
     for user in users:
         data.append({
