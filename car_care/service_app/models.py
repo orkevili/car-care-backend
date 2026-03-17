@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 # Create your models here.
 class Vehicle(models.Model):
@@ -43,14 +44,15 @@ class ServicePart(models.Model):
 
     def __str__(self):
         return f"{self.service.title} - {self.part.name} ({self.quantity_used}pc)"
+    
+    def clean(self):
+        if not self.pk:
+            if self.quantity_used > self.part.quantity:
+                raise ValidationError({'quantity_used': f"Not enough parts in stock! ({self.part.quantity} pc)"})
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            if self.quantity_used > self.part.quantity:
-                self.quantity_used = self.part.quantity
-                self.part.quantity = 0
-            else:
-                self.part.quantity -= self.quantity_used
-                self.part.save()
+            self.part.quantity -= self.quantity_used
+            self.part.save()
         super().save(*args, **kwargs)
 
