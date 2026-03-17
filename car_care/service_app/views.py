@@ -4,7 +4,7 @@ from django.http import JsonResponse
 
 # Create your views here.
 def home(request):
-    return "Backend is running..."
+    return JsonResponse("Backend is running...", safe=False)
 
 def users(request):
     users = User.objects.all()
