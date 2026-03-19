@@ -1,17 +1,24 @@
 from .models import User, Vehicle, Service, Part, ServicePart
 from .serializers import serialize_users, serialize_vehicles, serialize_services, serialize_parts, serialize_servicepart
 from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 # Create your views here.
 def home(request):
-    return JsonResponse("Server running...", safe=False)
+    return JsonResponse({"status": "Server online"}, safe=False)
 
-def users(request):
-    users = User.objects.all()
-    return JsonResponse(serialize_users(users), safe=False)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_current_user(request):
+    return Response({"user": request.user.username})
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def vehicles(request):
-    vehicles = Vehicle.objects.all()
+    user = request.user
+    vehicles = Vehicle.objects.filter(owner=user)
     return JsonResponse(serialize_vehicles(vehicles), safe=False)
 
 def services(request):
