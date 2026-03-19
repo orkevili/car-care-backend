@@ -18,8 +18,25 @@ def get_current_user(request):
 @permission_classes([IsAuthenticated])
 def vehicles(request):
     user = request.user
-    vehicles = Vehicle.objects.filter(owner=user)
-    return JsonResponse(serialize_vehicles(vehicles), safe=False)
+    if request.method == 'GET':
+        vehicles = Vehicle.objects.filter(owner=user)
+        return JsonResponse(serialize_vehicles(vehicles), safe=False)
+    if request.method == 'POST':
+        car_data = request.data.get('newCar', {})
+        try:
+            new_vehicle = Vehicle.objects.create(
+                owner = user,
+                make = car_data.get('brand'),
+                license_plate = car_data.get('plate'),
+                year = car_data.get('year'),
+                fuel = car_data.get('fuel'),
+                puchase_date = car_data.get('puchase_date'),
+                purchase_price = car_data.get('purchase_price'),
+                puchase_odometer = car_data.get('puchase_odometer'),
+            )
+            return Response({"msg": "New vehicle added to garage!"})
+        except Exception as e:
+            return Response({"error": f"Error during save, {e}"})
 
 def services(request):
     services = Service.objects.all()
