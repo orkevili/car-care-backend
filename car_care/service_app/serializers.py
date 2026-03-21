@@ -15,6 +15,7 @@ def serialize_vehicles(vehicles: Iterable[Vehicle]) -> List[Dict[str, Any]]:
     data = []
     for vehicle in vehicles:
         data.append({
+            'id': vehicle.id,
             'make': vehicle.make,
             'model': vehicle.model,
             'license_plate': vehicle.license_plate,
@@ -31,6 +32,7 @@ def serialize_services(services: Iterable[Service]) -> List[Dict[str, Any]]:
     data = []
     for service in services:
         data.append({
+            'id': service.id,
             'title': service.title,
             'description': service.description,
             'odometer': service.odometer,
@@ -45,6 +47,7 @@ def serialize_parts(parts: Iterable[Part]) -> List[Dict[str, Any]]:
     data = []
     for part in parts:
         data.append({
+            'id': part.id,
             'name': part.name,
             'article_number': part.article_number,
             'quantity': part.quantity,

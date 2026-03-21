@@ -1,0 +1,5 @@
+car_care/service_app/__pycache__/models.cpython-312.pyc
+car_care/service_app/__pycache__/serializers.cpython-312.pyc
+car_care/service_app/__pycache__/urls.cpython-312.pyc
+car_care/service_app/__pycache__/views.cpython-312.pyc
+car_care/db.sqlite3

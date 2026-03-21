@@ -5,7 +5,7 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("me/", views.get_current_user, name="current_user"),
     path("vehicles/", views.vehicles, name="vehicles"),
-    path("services/", views.services, name="services"),
+    path("vehicles/<int:vehicle_id>/services/", views.services, name="services"),
     path("parts/", views.parts, name="parts"),
     path("serviceparts/", views.serviceparts, name="serviceparts"),
 ]

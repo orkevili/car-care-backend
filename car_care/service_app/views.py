@@ -1,6 +1,7 @@
 from .models import User, Vehicle, Service, Part, ServicePart
 from .serializers import serialize_users, serialize_vehicles, serialize_services, serialize_parts, serialize_servicepart
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -38,8 +39,13 @@ def vehicles(request):
         except Exception as e:
             return Response({"error": f"Error during save, {e}"})
 
-def services(request):
-    services = Service.objects.all()
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def services(request, vehicle_id):
+    vehicle = get_object_or_404(Vehicle, id=vehicle_id, owner=request.user)
+    print(vehicle)
+    services = Service.objects.filter(vehicle=vehicle)
+    print(services)
     return JsonResponse(serialize_services(services), safe=False)
 
 def parts(request):

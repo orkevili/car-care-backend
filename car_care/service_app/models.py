@@ -10,7 +10,7 @@ class Vehicle(models.Model):
     license_plate = models.CharField(max_length=24, null=True, blank=True)
     year = models.IntegerField()
     fuel = models.CharField(max_length=24, null=True, blank=True)
-    purchase_date = models.DateField(default=timezone.now)
+    purchase_date = models.DateField(default=timezone.now, null=True, blank=True)
     purchase_price = models.IntegerField(default=0)
     purchase_odometer = models.IntegerField(default=0)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
