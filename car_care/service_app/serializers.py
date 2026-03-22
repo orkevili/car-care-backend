@@ -22,6 +22,7 @@ def serialize_vehicles(vehicles: Iterable[Vehicle]) -> List[Dict[str, Any]]:
             'year': vehicle.year,
             'fuel': vehicle.fuel,
             'purchase_price': vehicle.purchase_price,
+            'purchase_date': vehicle.purchase_date,
             'purchase_odometer': vehicle.purchase_odometer,
             'owner': vehicle.owner.username,
         })

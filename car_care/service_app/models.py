@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
-# Create your models here.
 class Vehicle(models.Model):
     make = models.CharField(max_length=64)
     model = models.CharField(max_length=64)

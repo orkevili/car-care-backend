@@ -42,24 +42,20 @@ def vehicles(request):
             return Response({"error": f"Error during save, {e}"}, status=400)
 
 
-@api_view(['PUT', 'DELETE'])
+@api_view(['PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def vehicle_details(request, vehicle_id):
     vehicle = get_object_or_404(Vehicle, id=vehicle_id, owner=request.user)
     if request.method == 'DELETE':
         vehicle.delete()
         return Response({"msg": "Vehicle deleted."})
-    if request.method == 'PUT':
+    if request.method == 'PATCH':
         car_data = request.data
         try:
-            vehicle.make = car_data.get('make')
-            vehicle.model = car_data.get('model')
-            vehicle.license_plate = car_data.get('plate')
-            vehicle.year = car_data.get('year')
-            vehicle.fuel = car_data.get('fuel')
-            vehicle.purchase_date = car_data.get('purchase_date')
-            vehicle.purchase_price = car_data.get('purchase_price')
-            vehicle.purchase_odometer = car_data.get('purchase_odometer')
+            allowed_fields = ['make', 'model', 'license_plate', 'year', 'fuel', 'purchase_date', 'purchase_price', 'purchase_odometer']
+            for field in allowed_fields:
+                if field in car_data:
+                    setattr(vehicle, field, car_data[field])
             vehicle.save()
             return Response({"msg": "Vehicle updated!"})
         except Exception as e:
@@ -90,14 +86,14 @@ def services(request, vehicle_id):
             return Response({"error", f"Error creating new service, {e}"}, status=400)
 
 
-@api_view(['PUT', 'DELETE'])
+@api_view(['PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def service_details(request, service_id):
     service = get_object_or_404(Service, id=service_id)
     if request.method == 'DELETE':
         service.delete()
         return Response({"msg", "Service deleted!"})
-    if  request.method == 'PUT':
+    if  request.method == 'PATCH':
         updated_service = request.data
         try:
             service.title = updated_service['title']
