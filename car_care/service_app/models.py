@@ -21,18 +21,19 @@ class Service(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     odometer = models.IntegerField(null=True, blank=True)
-    time = models.DateTimeField(default=timezone.now)
+    date = models.DateField(default=timezone.now)
     labor_cost = models.IntegerField(default=0)
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"ID: {self.pk} | {self.title}({self.vehicle.model}) - {self.labor_cost} | {self.time}"
+        return f"ID: {self.pk} | {self.title}({self.vehicle.model}) - {self.labor_cost} | {self.date}"
 
 class Part(models.Model):
     name = models.CharField(max_length=255)
-    article_number = models.IntegerField(null=True, blank=True)
+    article_number = models.CharField(max_length=255, null=True, blank=True)
     quantity = models.IntegerField(default=0)
     price = models.IntegerField(default=0)
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, default=None)
 
     def __str__(self):
         return f"ID: {self.pk} | {self.name} - {self.quantity}pc, {self.price}/quantity"

@@ -37,7 +37,7 @@ def serialize_services(services: Iterable[Service]) -> List[Dict[str, Any]]:
             'title': service.title,
             'description': service.description,
             'odometer': service.odometer,
-            'time': service.time,
+            'date': service.date,
             'labor_cost': service.labor_cost,
             'vehicle': service.vehicle.pk
         })

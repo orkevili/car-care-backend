@@ -70,15 +70,14 @@ def services(request, vehicle_id):
         services = Service.objects.filter(vehicle=vehicle)
         return JsonResponse(serialize_services(services), safe=False)
     if request.method == 'POST':
-        service_data = request.data['newService']
-        print(service_data)
+        service_data = request.data
         try:
             new_service = Service.objects.create(
                 vehicle=vehicle,
                 title = service_data['title'],
                 description = service_data['description'],
                 odometer = service_data['odometer'],
-                time = service_data['date'],
+                date = service_data['date'],
                 labor_cost = service_data['labor_cost'],
             )
             return Response({"msg", "Service added!"})
@@ -94,13 +93,12 @@ def service_details(request, service_id):
         service.delete()
         return Response({"msg", "Service deleted!"})
     if  request.method == 'PATCH':
-        updated_service = request.data
+        service_data = request.data
         try:
-            service.title = updated_service['title']
-            service.description = updated_service['description']
-            service.time = updated_service['date']
-            service.odometer = updated_service['odometer']
-            service.labor_cost = updated_service['labor_cost']
+            allowed_fields = ['title', 'description', 'date', 'odometer', 'labor_cost']
+            for field in allowed_fields:
+                if field in allowed_fields:
+                    setattr(service, field, service_data[field])
             service.save()
             return Response({"msg": "Service details updated!"})
         except Exception as e:
@@ -109,9 +107,10 @@ def service_details(request, service_id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def parts(request, service_id):
-    service = get_object_or_404(Service, id=service_id)
-    parts = Part.objects.filter(service=service)
+def parts(request, vehicle_id):
+    vehicle = get_object_or_404(Vehicle, id=vehicle_id)
+    print(vehicle)
+    parts = Part.objects.filter(vehicle=vehicle)
     return JsonResponse(serialize_parts(parts), safe=False)
 
 
