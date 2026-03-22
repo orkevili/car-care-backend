@@ -16,7 +16,7 @@ class Vehicle(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.make} {self.model} ({self.year}) - {self.owner.username}"
+        return f"ID: {self.pk} | {self.make} {self.model} ({self.year}) - {self.owner.username}"
 
 class Service(models.Model):
     title = models.CharField(max_length=255)
@@ -27,7 +27,7 @@ class Service(models.Model):
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.title}({self.vehicle.model}) - {self.labor_cost} | {self.time}"
+        return f"ID: {self.pk} | {self.title}({self.vehicle.model}) - {self.labor_cost} | {self.time}"
 
 class Part(models.Model):
     name = models.CharField(max_length=255)
@@ -36,7 +36,7 @@ class Part(models.Model):
     price = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.name} - {self.quantity}pc, {self.price}/quantity"
+        return f"ID: {self.pk} | {self.name} - {self.quantity}pc, {self.price}/quantity"
 
 class ServicePart(models.Model):
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
@@ -44,7 +44,7 @@ class ServicePart(models.Model):
     quantity_used = models.IntegerField(default=1)
 
     def __str__(self):
-        return f"{self.service.title} - {self.part.name} ({self.quantity_used}pc)"
+        return f"ID: {self.pk} | {self.service.title} - {self.part.name} ({self.quantity_used}pc)"
     
     def clean(self):
         if not self.pk:

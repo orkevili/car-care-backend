@@ -9,10 +9,12 @@ from rest_framework.response import Response
 def home(request):
     return JsonResponse({"status": "Server online"}, safe=False)
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_current_user(request):
     return Response({"user": request.user.username})
+
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
@@ -39,6 +41,7 @@ def vehicles(request):
         except Exception as e:
             return Response({"error": f"Error during save, {e}"}, status=400)
 
+
 @api_view(['PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def vehicle_details(request, vehicle_id):
@@ -48,7 +51,6 @@ def vehicle_details(request, vehicle_id):
         return Response({"msg": "Vehicle deleted."})
     if request.method == 'PUT':
         car_data = request.data
-        print(car_data)
         try:
             vehicle.make = car_data.get('make')
             vehicle.model = car_data.get('model')
@@ -63,12 +65,51 @@ def vehicle_details(request, vehicle_id):
         except Exception as e:
             return Response({"error": f"Error during update: {e}"}, status=400)
 
-@api_view(['GET'])
+
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def services(request, vehicle_id):
     vehicle = get_object_or_404(Vehicle, id=vehicle_id, owner=request.user)
-    services = Service.objects.filter(vehicle=vehicle)
-    return JsonResponse(serialize_services(services), safe=False)
+    if request.method == 'GET':
+        services = Service.objects.filter(vehicle=vehicle)
+        return JsonResponse(serialize_services(services), safe=False)
+    if request.method == 'POST':
+        service_data = request.data['newService']
+        print(service_data)
+        try:
+            new_service = Service.objects.create(
+                vehicle=vehicle,
+                title = service_data['title'],
+                description = service_data['description'],
+                odometer = service_data['odometer'],
+                time = service_data['date'],
+                labor_cost = service_data['labor_cost'],
+            )
+            return Response({"msg", "Service added!"})
+        except Exception as e:
+            return Response({"error", f"Error creating new service, {e}"}, status=400)
+
+
+@api_view(['PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def service_details(request, service_id):
+    service = get_object_or_404(Service, id=service_id)
+    if request.method == 'DELETE':
+        service.delete()
+        return Response({"msg", "Service deleted!"})
+    if  request.method == 'PUT':
+        updated_service = request.data
+        try:
+            service.title = updated_service['title']
+            service.description = updated_service['description']
+            service.time = updated_service['date']
+            service.odometer = updated_service['odometer']
+            service.labor_cost = updated_service['labor_cost']
+            service.save()
+            return Response({"msg": "Service details updated!"})
+        except Exception as e:
+            return Response({"error": f"Error updating service data, {e}"}, status=400)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -76,6 +117,7 @@ def parts(request, service_id):
     service = get_object_or_404(Service, id=service_id)
     parts = Part.objects.filter(service=service)
     return JsonResponse(serialize_parts(parts), safe=False)
+
 
 def serviceparts(request):
     parts = ServicePart.objects.all()
