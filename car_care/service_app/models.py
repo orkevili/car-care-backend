@@ -11,8 +11,8 @@ class Vehicle(models.Model):
     year = models.IntegerField()
     fuel = models.CharField(max_length=24, null=True, blank=True)
     purchase_date = models.DateField(default=timezone.now, null=True, blank=True)
-    purchase_price = models.IntegerField(default=0)
-    purchase_odometer = models.IntegerField(default=0)
+    purchase_price = models.IntegerField(null=True, blank=True)
+    purchase_odometer = models.IntegerField(null=True, blank=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
