@@ -97,7 +97,7 @@ def service_details(request, service_id):
         try:
             allowed_fields = ['title', 'description', 'date', 'odometer', 'labor_cost']
             for field in allowed_fields:
-                if field in allowed_fields:
+                if field in service_data:
                     setattr(service, field, service_data[field])
             service.save()
             return Response({"msg": "Service details updated!"})
@@ -105,13 +105,47 @@ def service_details(request, service_id):
             return Response({"error": f"Error updating service data, {e}"}, status=400)
 
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def parts(request, vehicle_id):
     vehicle = get_object_or_404(Vehicle, id=vehicle_id)
-    print(vehicle)
-    parts = Part.objects.filter(vehicle=vehicle)
-    return JsonResponse(serialize_parts(parts), safe=False)
+    if request.method == 'GET':
+        parts = Part.objects.filter(vehicle=vehicle)
+        return JsonResponse(serialize_parts(parts), safe=False)
+    if request.method == 'POST':
+        part_data = request.data
+        try:
+            new_part = Part.objects.create(
+                name=part_data['name'],
+                article_number=part_data['article_number'],
+                quantity=part_data['quantity'],
+                price=part_data['price'],
+                vehicle=vehicle
+            )
+            return Response({"msg": "Part added."})
+        except Exception as e:
+            return Response({"error": f"Error adding part, {e}"})
+
+@api_view(['PATCH', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def part_details(request, part_id):
+    part = get_object_or_404(Part, id=part_id)
+    if request.method == 'DELETE':
+        part.delete()
+        return Response({"msg":"Part deleted!"})
+    if request.method == 'PATCH':
+        part_data = request.data
+        print(part_data)
+        try:
+            allowed_fields = ['name', 'article_number', 'quantity', 'price']
+            for field in allowed_fields:
+                if field in part_data:
+                    setattr(part,    field, part_data[field])
+            part.save()
+            return Response({"msg": "Part updated!"})
+        except Exception as e:
+            return Response({"error": f"Error updating part data, {e}"})
+
 
 
 def serviceparts(request):
