@@ -2,6 +2,8 @@ from .models import User, Vehicle, Service, Part, ServicePart
 from .serializers import serialize_users, serialize_vehicles, serialize_services, serialize_parts, serialize_servicepart
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from django.db import transaction
+from django.core.exceptions import ValidationError
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -80,7 +82,20 @@ def services(request, vehicle_id):
                 date = service_data['date'],
                 labor_cost = service_data['labor_cost'],
             )
-            return Response({"msg", "Service added!"})
+
+            used_parts = service_data['used_parts']
+            for part in used_parts:
+                part_obj = get_object_or_404(Part, id=part['part_id'])
+                new_service_part = ServicePart(
+                    service=new_service,
+                    part=part_obj,
+                    quantity_used=part['quantity']
+                )
+                new_service_part.full_clean()
+                new_service_part.save()
+            return Response({"msg", "Service and parts are added!"})
+        except ValidationError as ve:
+            return Response({"error": f"Validation error: {ve}"}, status=400)
         except Exception as e:
             return Response({"error", f"Error creating new service, {e}"}, status=400)
 
@@ -90,20 +105,53 @@ def services(request, vehicle_id):
 def service_details(request, service_id):
     service = get_object_or_404(Service, id=service_id)
     if request.method == 'DELETE':
-        service.delete()
-        return Response({"msg", "Service deleted!"})
-    if  request.method == 'PATCH':
+        with transaction.atomic():
+            for sp in ServicePart.objects.filter(service=service):
+                sp.part.quantity += sp.quantity_used
+                sp.part.save()
+            service.delete()
+        return Response({"msg": "Service deleted and used parts restocked!"})
+    if request.method == 'PATCH':
         service_data = request.data
         try:
-            allowed_fields = ['title', 'description', 'date', 'odometer', 'labor_cost']
-            for field in allowed_fields:
-                if field in service_data:
-                    setattr(service, field, service_data[field])
-            service.save()
-            return Response({"msg": "Service details updated!"})
+            with transaction.atomic():
+                allowed_fields = ['title', 'description', 'date', 'odometer', 'labor_cost']
+                for field in allowed_fields:
+                    if field in service_data:
+                        setattr(service, field, service_data[field])
+                service.save()
+                if 'used_parts' in service_data:
+                    existing_sps = {sp.part.id: sp for sp in ServicePart.objects.filter(service=service)}
+                    print(service_data)
+                    for item in service_data['used_parts']:
+                        part_id = item.get('part_id')
+                        if not part_id:
+                            raise ValidationError("Error with part data")
+                        incoming_qty = int(item.get('quantity', item.get('quantity_used', 0))) 
+                        part_obj = get_object_or_404(Part, id=part_id)
+                        if part_id in existing_sps:
+                            sp = existing_sps.pop(part_id) 
+                            diff = incoming_qty - sp.quantity_used
+                            if diff != 0:
+                                if part_obj.quantity < diff:
+                                    raise ValidationError(f"Not enough {part_obj.name} in stock! (Missing: {diff - part_obj.quantity} pcs)")
+                                part_obj.quantity -= diff
+                                part_obj.save()
+                                sp.quantity_used = incoming_qty
+                                sp.save()
+                        else:
+                            new_sp = ServicePart(service=service, part=part_obj, quantity_used=incoming_qty)
+                            new_sp.full_clean()
+                            new_sp.save()      
+                    for sp in existing_sps.values():
+                        sp.part.quantity += sp.quantity_used
+                        sp.part.save()
+                        sp.delete()
+            return Response({"msg": "Service details updated successfully!"})
+        except ValidationError as ve:
+            return Response({"error": str(ve)}, status=400)
         except Exception as e:
-            return Response({"error": f"Error updating service data, {e}"}, status=400)
-
+            return Response({"error": f"Error updating service data: {e}"}, status=400)
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
@@ -122,7 +170,7 @@ def parts(request, vehicle_id):
                 price=part_data['price'],
                 vehicle=vehicle
             )
-            return Response({"msg": "Part added."})
+            return Response({"msg": "Part added!"})
         except Exception as e:
             return Response({"error": f"Error adding part, {e}"})
 
@@ -135,7 +183,6 @@ def part_details(request, part_id):
         return Response({"msg":"Part deleted!"})
     if request.method == 'PATCH':
         part_data = request.data
-        print(part_data)
         try:
             allowed_fields = ['name', 'article_number', 'quantity', 'price']
             for field in allowed_fields:
@@ -145,9 +192,3 @@ def part_details(request, part_id):
             return Response({"msg": "Part updated!"})
         except Exception as e:
             return Response({"error": f"Error updating part data, {e}"})
-
-
-
-def serviceparts(request):
-    parts = ServicePart.objects.all()
-    return JsonResponse(serialize_servicepart(parts), safe=False)

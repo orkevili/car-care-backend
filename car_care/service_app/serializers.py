@@ -32,6 +32,13 @@ def serialize_vehicles(vehicles: Iterable[Vehicle]) -> List[Dict[str, Any]]:
 def serialize_services(services: Iterable[Service]) -> List[Dict[str, Any]]:
     data = []
     for service in services:
+        service_parts = ServicePart.objects.filter(service=service)
+        parts = [{
+            "part_id": part.part.pk, 
+            "part_name": part.part.name, 
+            "quantity_used": part.quantity_used
+            } for part in service_parts
+        ]
         data.append({
             'id': service.id,
             'title': service.title,
@@ -39,7 +46,8 @@ def serialize_services(services: Iterable[Service]) -> List[Dict[str, Any]]:
             'odometer': service.odometer,
             'date': service.date,
             'labor_cost': service.labor_cost,
-            'vehicle': service.vehicle.pk
+            'vehicle': service.vehicle.pk,
+            'used_parts': parts
         })
 
     return data
@@ -61,7 +69,9 @@ def serialize_servicepart(serviceparts: Iterable[ServicePart]) -> List[Dict[str,
     data = []
     for part in serviceparts:
         data.append({
+            'service_id': part.service.pk,
             'service_title': part.service.title,
+            'part_id': part.part.pk,
             'part_name': part.part.name,
             'quantity_used': part.quantity_used
         })
