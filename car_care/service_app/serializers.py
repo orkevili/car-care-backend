@@ -35,7 +35,8 @@ def serialize_services(services: Iterable[Service]) -> List[Dict[str, Any]]:
         service_parts = ServicePart.objects.filter(service=service)
         parts = [{
             "part_id": part.part.pk, 
-            "part_name": part.part.name, 
+            "part_name": part.part.name,
+            "part_price": part.part.price,
             "quantity_used": part.quantity_used
             } for part in service_parts
         ]

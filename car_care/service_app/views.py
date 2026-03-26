@@ -33,6 +33,17 @@ def register_user(request):
 def get_current_user(request):
     return Response({"user": request.user.username})
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_data(request):
+    print(request.FILES)
+    if 'csv_file' in request.FILES:
+        file_obj = request.FILES['csv_file']
+        print(f"Fájl neve: {file_obj.name}")
+        print(f"Fájl mérete: {file_obj.size} byte")
+    return Response({"msg": "File received!"})
+
+
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
