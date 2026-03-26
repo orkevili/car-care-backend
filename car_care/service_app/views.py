@@ -33,16 +33,28 @@ def register_user(request):
 def get_current_user(request):
     return Response({"user": request.user.username})
 
+
+import io, csv
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def upload_data(request):
-    print(request.FILES)
-    if 'csv_file' in request.FILES:
-        file_obj = request.FILES['csv_file']
-        print(f"Fájl neve: {file_obj.name}")
-        print(f"Fájl mérete: {file_obj.size} byte")
-    return Response({"msg": "File received!"})
-
+    if 'csv_file' not in request.FILES:
+        return Response({"error": "No file received!"})
+    
+    file_obj = request.FILES['csv_file']
+    try:
+        decoded_file = file_obj.read().decode('utf-8')
+        io_string = io.StringIO(decoded_file)
+        reader = csv.DictReader(io_string)
+        print(reader)
+        imported_count = 0
+        for row in reader:
+            imported_count += 1
+        return Response({"msg": f"Successfully imported {imported_count} records!"})
+    except UnicodeDecodeError:
+        return Response({"error": "Invalid file encoding. Please select use 'UTF-8' format!"}, status=400)
+    except Exception as e:
+        return Response({"error": f"Error saving data: {e}"})
 
 
 @api_view(['GET', 'POST'])
