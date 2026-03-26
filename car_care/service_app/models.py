@@ -44,7 +44,7 @@ class ServicePart(models.Model):
     quantity_used = models.IntegerField(default=1)
 
     def __str__(self):
-        return f"ID: {self.pk} | {self.service.title} - {self.part.name} ({self.quantity_used}pc)"
+        return f"ID: {self.pk} | {self.service.title} - {self.part.name} ({self.quantity_used} pc)"
     
     def clean(self):
         if not self.pk:

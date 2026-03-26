@@ -2,15 +2,31 @@ from .models import User, Vehicle, Service, Part, ServicePart
 from .serializers import serialize_users, serialize_vehicles, serialize_services, serialize_parts, serialize_servicepart
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.db import transaction
+from django.db import transaction, IntegrityError
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 def home(request):
     return JsonResponse({"status": "Server online"}, safe=False)
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_user(request):
+    data = request.data
+    try:
+        user = User.objects.create_user(
+            username=data['username'],
+            password=data['password'],
+            email=data.get('email', '')
+        )
+        return Response({"msg": "Registration succesful!"}, status=201)
+    except IntegrityError:
+        return Response({"error", "Username already exists!"}, status=400)
+    except Exception as e:
+        return Response({"error", f"Registration failed: {e}"}, status=400)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -122,7 +138,6 @@ def service_details(request, service_id):
                 service.save()
                 if 'used_parts' in service_data:
                     existing_sps = {sp.part.id: sp for sp in ServicePart.objects.filter(service=service)}
-                    print(service_data)
                     for item in service_data['used_parts']:
                         part_id = item.get('part_id')
                         if not part_id:
