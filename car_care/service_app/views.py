@@ -34,6 +34,63 @@ def get_current_user(request):
     return Response({"user": request.user.username})
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def export_data(request):
+    user = request.user
+    data = []
+    try:
+        vehicles = Vehicle.objects.filter(owner=user)
+        for vehicle in vehicles:
+            vehicle_data = {
+                "make": vehicle.make,
+                "model": vehicle.model,
+                "license_plate": vehicle.license_plate,
+                "year": vehicle.year,
+                "fuel": vehicle.fuel,
+                "purchase_date": vehicle.purchase_date,
+                "purchase_price": vehicle.purchase_price,
+                "purchase_odometer": vehicle.purchase_odometer,
+                "inventory_parts": [],
+                "services": []
+            }
+
+            parts = Part.objects.filter(vehicle=vehicle)
+            for part in parts:
+                part_data = {
+                    "name": part.name,
+                    "article_number": part.article_number,
+                    "quantity": part.quantity,
+                    "price": part.price,
+                }
+                vehicle_data["inventory_parts"].append(part_data)
+
+            services = Service.objects.filter(vehicle=vehicle)
+            for service in services:
+                service_data = {
+                    "title": service.title,
+                    "description": service.description,
+                    "odometer": service.odometer,
+                    "date": service.date,
+                    "labor_cost": service.labor_cost,
+                    "used_parts": []
+                }
+                vehicle_data["services"].append(service_data)
+                s_parts = ServicePart.objects.filter(service=service)
+                for sp in s_parts:
+                    sp_data = {
+                        "part_name": sp.part.name,
+                        "part_article_number": sp.part.article_number,
+                        "quantity_used": sp.quantity_used
+                    }
+                    service_data["used_parts"].append(sp_data)
+            data.append(vehicle_data)            
+        return Response({"msg": f"Data exported! Vehicles: {len(vehicles)}, services: {len(services)}, parts: {len(parts)}",
+            "backup_data": data
+        }, status=200)
+    except Exception as e:
+        return Response({"error": f"Error during data export, {e}"})
+
 import io, csv
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -46,9 +103,9 @@ def upload_data(request):
         decoded_file = file_obj.read().decode('utf-8')
         io_string = io.StringIO(decoded_file)
         reader = csv.DictReader(io_string)
-        print(reader)
         imported_count = 0
         for row in reader:
+            print(row)
             imported_count += 1
         return Response({"msg": f"Successfully imported {imported_count} records!"})
     except UnicodeDecodeError:
