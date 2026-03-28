@@ -91,23 +91,16 @@ def export_data(request):
     except Exception as e:
         return Response({"error": f"Error during data export, {e}"})
 
-import io, csv
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def upload_data(request):
-    if 'csv_file' not in request.FILES:
+    if 'backup_file' not in request.FILES:
         return Response({"error": "No file received!"})
     
-    file_obj = request.FILES['csv_file']
+    file_obj = request.FILES['backup_file']
     try:
-        decoded_file = file_obj.read().decode('utf-8')
-        io_string = io.StringIO(decoded_file)
-        reader = csv.DictReader(io_string)
-        imported_count = 0
-        for row in reader:
-            print(row)
-            imported_count += 1
-        return Response({"msg": f"Successfully imported {imported_count} records!"})
+        print(file_obj)
+        return Response({"msg": f"Successfully imported  records!"})
     except UnicodeDecodeError:
         return Response({"error": "Invalid file encoding. Please select use 'UTF-8' format!"}, status=400)
     except Exception as e:
