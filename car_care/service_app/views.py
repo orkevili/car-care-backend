@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+import json
 
 def home(request):
     return JsonResponse({"status": "Server online"}, safe=False)
@@ -27,6 +28,16 @@ def register_user(request):
         return Response({"error", "Username already exists!"}, status=400)
     except Exception as e:
         return Response({"error", f"Registration failed: {e}"}, status=400)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_profile(request):
+    try:
+        user = request.user
+        user.delete()
+        return Response({"msg": "Account and all related data deleted successfully!"})
+    except Exception as e:
+        return Response({"error": f"Error during deleting account: {e}"})
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -93,14 +104,69 @@ def export_data(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def upload_data(request):
+def import_data(request):
     if 'backup_file' not in request.FILES:
         return Response({"error": "No file received!"})
     
     file_obj = request.FILES['backup_file']
     try:
-        print(file_obj)
-        return Response({"msg": f"Successfully imported  records!"})
+        decoded_file = file_obj.read().decode('utf-8')
+        backup_data = json.loads(decoded_file)
+        stats = {"vehicles_created": 0, "vehicles_updated": 0}
+        with transaction.atomic():
+            for v_data in backup_data:
+                vehicle, v_created = Vehicle.objects.update_or_create(
+                    owner = request.user,
+                    make=v_data.get('make'),
+                    model=v_data.get('model'),
+                    license_plate=v_data.get('license_plate'),
+                    defaults={
+                        'year': v_data.get('year'),
+                        'fuel': v_data.get('fuel'),
+                        'purchase_date': v_data.get('purchase_date'),
+                        'purchase_price': v_data.get('purchase_price'),
+                        'purchase_odometer': v_data.get('purchase_odometer')
+                    }
+                )
+                if v_created: stats['vehicles_created'] += 1
+                else: stats['vehicles_updated'] += 1
+
+                created_parts = {}
+                for p_data in v_data.get('inventory_parts', []):
+                    part, p_created = Part.objects.update_or_create(
+                        vehicle=vehicle,
+                        name=p_data.get('name'),
+                        article_number=p_data.get('article_number'),
+                        defaults={
+                            'quantity': p_data.get('quantity', 0),
+                            'price': p_data.get('price', 0),
+                        }
+                    )
+                    part_key = f"{part.name}_{part.article_number}"
+                    created_parts[part_key] = part
+                for s_data in v_data.get('services', []):
+                    service, s_created = Service.objects.update_or_create(
+                        vehicle=vehicle,
+                        title=s_data.get('title'),
+                        description=s_data.get('description'),
+                        defaults={
+                            'odometer': s_data.get('odometer'),
+                            'date': s_data.get('date'),
+                            'labor_cost': s_data.get('labor_cost', 0),
+                        }
+                    )
+                    for sp_data in s_data.get('used_parts', []):
+                        part_key =  f"{sp_data.get('part_name')}_{sp_data.get('part_article_number')}"
+                        part_obj = created_parts.get(part_key)
+                        if part_obj:
+                            ServicePart.objects.update_or_create(
+                                service=service,
+                                part=part_obj,
+                                defaults={
+                                'quantity_used': sp_data.get('quantity_used', 1)
+                                }
+                            )
+        return Response({"msg": f"Done! New vehicle: {stats['vehicles_created']}, Update: {stats['vehicles_updated']}"})
     except UnicodeDecodeError:
         return Response({"error": "Invalid file encoding. Please select use 'UTF-8' format!"}, status=400)
     except Exception as e:
