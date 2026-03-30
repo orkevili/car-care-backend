@@ -37,7 +37,7 @@ def delete_profile(request):
         user.delete()
         return Response({"msg": "Account and all related data deleted successfully!"})
     except Exception as e:
-        return Response({"error": f"Error during deleting account: {e}"})
+        return Response({"error": f"Error deleting profile: {e}"})
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -181,7 +181,8 @@ def vehicles(request):
         vehicles = Vehicle.objects.filter(owner=user)
         return JsonResponse(serialize_vehicles(vehicles), safe=False)
     if request.method == 'POST':
-        car_data = request.data['newCar']
+        car_data = request.data
+        print(car_data)
         try:
             new_vehicle = Vehicle.objects.create(
                 owner = user,
@@ -209,7 +210,7 @@ def vehicle_details(request, vehicle_id):
     if request.method == 'PATCH':
         car_data = request.data
         try:
-            allowed_fields = ['make', 'model', 'license_plate', 'year', 'fuel', 'purchase_date', 'purchase_price', 'purchase_odometer']
+            allowed_fields = ['make', 'model', 'license_plate', 'year', 'fuel', 'purchase_date', 'purchase_price', 'purchase_odometer', 'image']
             for field in allowed_fields:
                 if field in car_data:
                     setattr(vehicle, field, car_data[field])

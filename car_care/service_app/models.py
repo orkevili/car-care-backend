@@ -12,6 +12,7 @@ class Vehicle(models.Model):
     purchase_date = models.DateField(default=timezone.now, null=True, blank=True)
     purchase_price = models.IntegerField(null=True, blank=True)
     purchase_odometer = models.IntegerField(null=True, blank=True)
+    image = models.ImageField(upload_to='vehicles/', null=True, blank=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):

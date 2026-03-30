@@ -25,6 +25,7 @@ def serialize_vehicles(vehicles: Iterable[Vehicle]) -> List[Dict[str, Any]]:
             'purchase_date': vehicle.purchase_date,
             'purchase_odometer': vehicle.purchase_odometer,
             'owner': vehicle.owner.username,
+            'image': vehicle.image.url if vehicle.image else None,
         })
 
     return data
