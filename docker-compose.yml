@@ -12,8 +12,11 @@ services:
 
   cloudflared:
     image: cloudflare/cloudflared:latest
+    container_name: cloudflared_tunnel
     restart: always
     command: tunnel run
+    env_file:
+      - .env
     environment:
       - TUNNEL_TOKEN=${eyJhIjoiY2MxYTVlMTkyYWJkMThkOTAzYmUzZjA0YjI1NGMzOWIiLCJ0IjoiZWJhZjA5OTYtM2FkNS00ZjY4LWJhNTgtYzNmMTkwOTUzMWM2IiwicyI6Ik1tSTRNalZoWkdFdFptRTFZaTAwTVdOa0xUZzRNMkl0T1RSa05qSXhaVEJsWlRJMSJ9}
     depends_on:
