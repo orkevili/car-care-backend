@@ -30,13 +30,13 @@ DEBUG = os.getenv('DEBUG') == 'True'
 raw_allowed_hosts = os.environ.get('ALLOWED_HOSTS', 'localhost')
 ALLOWED_HOSTS = raw_allowed_hosts.split(',')
 
-raw_cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:8000')
+raw_cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://shitbox.hu')
 CORS_ALLOWED_ORIGINS = raw_cors_origins.split(',')
 CORS_ALLOW_CREDENTIALS = True
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-raw_csrf_origins = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://back.shitbox.hu')
+raw_csrf_origins = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://shitbox.hu')
 CSRF_TRUSTED_ORIGINS = raw_csrf_origins.split(',')
 
 # Application definition
