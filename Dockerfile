@@ -20,4 +20,4 @@ RUN python manage.py collectstatic --noinput
 # A Gunicorn indítása
 # FIGYELEM: A 'Django_car_care.wsgi' részt cseréld le a te projekted nevére, 
 # abban a mappában van a wsgi.py fájl!
-CMD ["gunicorn", "car_care.wsgi:application", "--bind", "0.0.0.0:6767"]
+CMD ["gunicorn", "car_care.wsgi:application", "--bind", "0.0.0.0:8000"]
