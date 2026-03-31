@@ -182,20 +182,22 @@ def vehicles(request):
         return JsonResponse(serialize_vehicles(vehicles), safe=False)
     if request.method == 'POST':
         car_data = request.data
-        print(car_data)
         try:
-            new_vehicle = Vehicle.objects.create(
-                owner = user,
-                make = car_data.get('make'),
-                model = car_data.get('model'),
-                license_plate = car_data.get('plate') or None,
-                year = car_data.get('year'),
-                fuel = car_data.get('fuel') or None,
-                purchase_date = car_data.get('purchase_date') or None,
-                purchase_price = car_data.get('purchase_price') or None,
-                purchase_odometer = car_data.get('purchase_odometer') or None,
-            )
+            with transaction.atomic():
+                new_vehicle = Vehicle.objects.create(
+                    owner = user,
+                    make = car_data.get('make'),
+                    model = car_data.get('model'),
+                    license_plate = car_data.get('license_plate') or None,
+                    year = car_data.get('year'),
+                    fuel = car_data.get('fuel') or None,
+                    purchase_date = car_data.get('purchase_date') or None,
+                    purchase_price = car_data.get('purchase_price') or None,
+                    purchase_odometer = car_data.get('purchase_odometer') or None,
+                )
             return Response({"msg": "New vehicle added to garage!"})
+        except IntegrityError:
+            return Response({"error": f"Vehicle with this license plate already exists: {car_data.get('license_plate')}"}, status=400)
         except Exception as e:
             return Response({"error": f"Error during save, {e}"}, status=400)
 
@@ -206,7 +208,7 @@ def vehicle_details(request, vehicle_id):
     vehicle = get_object_or_404(Vehicle, id=vehicle_id, owner=request.user)
     if request.method == 'DELETE':
         vehicle.delete()
-        return Response({"msg": "Vehicle deleted."})
+        return Response({"msg": "Vehicle deleted."}, status=200)
     if request.method == 'PATCH':
         car_data = request.data
         try:
@@ -249,7 +251,7 @@ def services(request, vehicle_id):
                 )
                 new_service_part.full_clean()
                 new_service_part.save()
-            return Response({"msg", "Service and parts are added!"})
+            return Response({"msg", "Service and parts are added!"}, status=200)
         except ValidationError as ve:
             return Response({"error": f"Validation error: {ve}"}, status=400)
         except Exception as e:
@@ -318,13 +320,17 @@ def parts(request, vehicle_id):
     if request.method == 'POST':
         part_data = request.data
         try:
-            new_part = Part.objects.create(
+            part, created = Part.objects.update_or_create(
                 name=part_data['name'],
                 article_number=part_data['article_number'],
                 quantity=part_data['quantity'],
                 price=part_data['price'],
                 vehicle=vehicle
             )
+            if not created:
+                part.quantity += int(part_data['quantity'])
+                part.save()
+                return Response({"msg": f"Part updated! New quantity: {part.quantity}"})
             return Response({"msg": "Part added!"})
         except Exception as e:
             return Response({"error": f"Error adding part, {e}"})

@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 class Vehicle(models.Model):
     make = models.CharField(max_length=64)
     model = models.CharField(max_length=64)
-    license_plate = models.CharField(max_length=24, null=True, blank=True)
+    license_plate = models.CharField(max_length=24, unique=True, null=True, blank=True)
     year = models.IntegerField()
     fuel = models.CharField(max_length=24, null=True, blank=True)
     purchase_date = models.DateField(default=timezone.now, null=True, blank=True)
