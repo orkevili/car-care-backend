@@ -27,7 +27,12 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = []
+raw_allowed_hosts = os.environ.get('ALLOWED_HOSTS', 'localhost')
+ALLOWED_HOSTS = raw_allowed_hosts.split(',')
+
+raw_cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:8000')
+CORS_ALLOWED_ORIGINS = raw_cors_origins.split(',')
+CORS_ALLOW_CREDENTIALS = True
 
 
 # Application definition
@@ -125,11 +130,6 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
-cors_env = os.environ.get('CORS_ALLOWED_ORIGINS', '')
-
-CORS_ALLOWED_ORIGINS = cors_env.split(',') if cors_env else []
-CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
