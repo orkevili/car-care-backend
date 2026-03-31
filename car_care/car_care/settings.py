@@ -30,7 +30,7 @@ DEBUG = os.getenv('DEBUG') == 'True'
 raw_allowed_hosts = os.environ.get('ALLOWED_HOSTS', 'localhost')
 ALLOWED_HOSTS = raw_allowed_hosts.split(',')
 
-raw_cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://shitbox.hu')
+raw_cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:8000')
 CORS_ALLOWED_ORIGINS = raw_cors_origins.split(',')
 CORS_ALLOW_CREDENTIALS = True
 
