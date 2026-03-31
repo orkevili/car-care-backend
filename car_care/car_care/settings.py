@@ -126,7 +126,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 CORS_ALLOWED_ORIGINS = [
-    str(os.getenv('FRONTEND_URL')),
+    os.getenv('FRONTEND_URL'),
     ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -137,5 +137,5 @@ REST_FRAMEWORK = {
 }
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }

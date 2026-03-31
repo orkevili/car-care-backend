@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    restart: always
+    env_file:
+      - .env
+    # Nem kell 'ports' szekció! Nem nyitunk ki portot a szerveren, 
+    # a Cloudflare Tunnel belső hálózaton éri el ezt a konténert.
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: always
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${eyJhIjoiY2MxYTVlMTkyYWJkMThkOTAzYmUzZjA0YjI1NGMzOWIiLCJ0IjoiZWJhZjA5OTYtM2FkNS00ZjY4LWJhNTgtYzNmMTkwOTUzMWM2IiwicyI6Ik1tSTRNalZoWkdFdFptRTFZaTAwTVdOa0xUZzRNMkl0T1RSa05qSXhaVEJsWlRJMSJ9}
+    depends_on:
+      - app
+
+
+
+
+      
