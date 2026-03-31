@@ -126,9 +126,9 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-CORS_ALLOWED_ORIGINS = [
-    os.getenv('FRONTEND_URL'),
-    ]
+cors_env = os.environ.get('CORS_ALLOWED_ORIGINS', '')
+
+CORS_ALLOWED_ORIGINS = cors_env.split(',') if cors_env else []
 CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
