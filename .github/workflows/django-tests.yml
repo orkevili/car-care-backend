@@ -10,6 +10,10 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./car_care
+
     env:
       SECRET_KEY: "dummy-secret-key-for-testing-only-12345"
       DEBUG: "True"
