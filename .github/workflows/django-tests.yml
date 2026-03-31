@@ -1,0 +1,39 @@
+name: Django CI Tests
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    env:
+      SECRET_KEY: "dummy-secret-key-for-testing-only-12345"
+      DEBUG: "True"
+      CORS_ALLOWED_ORIGINS: "http://localhost:3000"
+
+    steps:
+    - name: Download code to virtual machine
+      uses: actions/checkout@v4
+
+    - name: Python setup
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12.10'
+
+    - name: Install requirements
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Database migrations (SQLite)
+      run: |
+        python manage.py makemigrations
+        python manage.py migrate
+
+    - name: Run tests
+      run: |
+        python manage.py test

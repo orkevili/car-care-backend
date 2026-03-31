@@ -23,3 +23,6 @@ car_care/service_app/migrations/__pycache__/0003_vehicle_license_plate.cpython-3
 car_care/service_app/migrations/__pycache__/0004_vehicle_purchase_date.cpython-312.pyc
 car_care/service_app/migrations/__pycache__/0005_alter_vehicle_purchase_date_and_more.cpython-312.pyc
 car_care/service_app/migrations/__pycache__/__init__.cpython-312.pyc
+.env
+car_care/service_app/__pycache__/models.cpython-312.pyc
+car_care/car_care/__pycache__/settings.cpython-312.pyc
