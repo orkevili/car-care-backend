@@ -12,7 +12,9 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: django_cloudflare
     restart: always
-    command: tunnel run
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
     env_file:
       - .env
     depends_on:
