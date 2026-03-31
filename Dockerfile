@@ -1,5 +1,5 @@
 # Alap image: könnyűsúlyú Python
-FROM python:3.12.10
+FROM python:3.12
 
 # Munkakönyvtár beállítása a konténeren belül
 WORKDIR /app
