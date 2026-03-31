@@ -3,6 +3,7 @@ djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 python-dotenv==1.2.2
 djangorestframework-simplejwt
+django-cors-headers
 Pillow
 python-dotenv==1.2.2
 gunicorn
