@@ -7,3 +7,4 @@ django-cors-headers
 Pillow
 python-dotenv==1.2.2
 gunicorn
+whitenoise
