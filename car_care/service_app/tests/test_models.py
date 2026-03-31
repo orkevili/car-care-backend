@@ -11,7 +11,6 @@ class VehicleModelTest(TestCase):
         self.client.force_authenticate(user=self.user)
         self.url = reverse('vehicles')
 
-
     def test_vehicle_creation(self):
         payload = {
             "make": "Toyota",
@@ -24,7 +23,6 @@ class VehicleModelTest(TestCase):
         self.assertEqual(str(vehicle), "ID: 1 | Toyota Camry (2020) - testuser")
         self.assertEqual(vehicle.year, 2020)
     
-
     def test_vehicle_creation_with_same_license(self):
         vehicle = Vehicle.objects.create(
             owner=self.user,
@@ -44,7 +42,6 @@ class VehicleModelTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Vehicle.objects.count(), 1)
     
-
     def test_vehicle_delete(self):
         vehicle = Vehicle.objects.create(
             owner=self.user,
@@ -58,7 +55,6 @@ class VehicleModelTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Vehicle.objects.count(), 0)
     
-
     def test_vehicle_update(self):
         vehicle = Vehicle.objects.create(
             owner=self.user,
@@ -75,6 +71,7 @@ class VehicleModelTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         vehicle.refresh_from_db()
         self.assertEqual(vehicle.year, 2016)
+
 
 class PartModelTest(TestCase):
     def setUp(self):
@@ -214,3 +211,177 @@ class ServiceModelTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         service.refresh_from_db()
         self.assertEqual(service.odometer, 100000)
+
+
+class ServicePartModelTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='testuser', password='password123')
+        self.client.force_authenticate(user=self.user)
+        self.vehicle = Vehicle.objects.create(
+            owner=self.user,
+            make="Toyota",
+            model="Hilux",
+            year=2013,
+            license_plate="ASD-123",
+            purchase_odometer=228000
+        )
+        self.part = Part.objects.create(
+            vehicle=self.vehicle,
+            name="Suspension",
+            article_number= "BL-19",
+            quantity= 4,
+            price= 16000
+        )
+        self.part2 = Part.objects.create(
+            vehicle=self.vehicle,
+            name="Brake pads",
+            article_number="BREMBO-5495",
+            quantity=10,
+            price=5000
+        )
+        self.payload = {
+            "title": "General service",
+            "description": "Suspension upgrade",
+            "odometer": 250000,
+            "date": "2026-03-30",
+            "labor_cost": 100000,
+            "used_parts": [{
+                "part_id": self.part.id,
+                "part_name": self.part.name,
+                "quantity": 2
+            }]
+        }
+        self.url = reverse('services', kwargs={'vehicle_id': self.vehicle.id})
+
+    def test_add_part_to_service(self):
+        response = self.client.post(self.url, self.payload, format='json')        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(ServicePart.objects.count(), 1)
+        self.assertEqual(Part.objects.first().quantity, 2)
+
+    def test_add_part_negative_quantity(self):
+        payload = {
+            "title": "General service",
+            "description": "Suspension upgrade",
+            "odometer": 250000,
+            "date": "2026-03-30",
+            "labor_cost": 100000,
+            "used_parts": [{
+                "part_id": self.part.id,
+                "part_name": self.part.name,
+                "quantity": -10
+            }]
+        }
+        response = self.client.post(self.url, payload, format='json')        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(ServicePart.objects.count(), 0)
+        self.assertEqual(Part.objects.first().quantity, 4)
+    
+    def test_add_phantom_part(self):
+        payload = {
+            "title": "General service",
+            "description": "Suspension upgrade",
+            "odometer": 250000,
+            "date": "2026-03-30",
+            "labor_cost": 100000,
+            "used_parts": [{
+                "part_id": 9999,
+                "part_name": "Phantom",
+                "quantity": 5
+            }]
+        }
+        response = self.client.post(self.url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_add_multiple_parts(self):
+        payload = {
+            "title": "General service",
+            "description": "-",
+            "odometer": 250000,
+            "date": "2026-03-30",
+            "labor_cost": 300000,
+            "used_parts": [{
+                "part_id": self.part.id,
+                "part_name": self.part.name,
+                "quantity": 2
+            }, {
+                "part_id": self.part2.id,
+                "part_name": self.part2.name,
+                "quantity": 8
+            }]
+        }
+        response = self.client.post(self.url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(ServicePart.objects.count(), 2)
+
+    def test_update_part_data_in_service(self):
+        self.client.post(self.url, self.payload, format='json')
+        service = Service.objects.first()
+        payload = {
+            "used_parts": [{
+                "part_id": self.part.id,
+                "part_name": self.part.name,
+                "quantity": 4
+            }]
+        }
+        url = reverse('service_details', kwargs={'service_id': service.id})
+        response = self.client.patch(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(ServicePart.objects.first().quantity_used, 4)
+        self.assertEqual(Part.objects.first().quantity, 0)
+
+    def test_update_part_negative_quantity(self):
+        self.client.post(self.url, self.payload, format='json')
+        service = Service.objects.first()
+        payload = {
+            "used_parts": [{
+                "part_id": self.part.id,
+                "part_name": self.part.name,
+                "quantity": -10
+            }]
+        }
+        url = reverse('service_details', kwargs={'service_id': service.id})
+        response = self.client.patch(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(ServicePart.objects.first().quantity_used, 2)
+        self.assertEqual(Part.objects.first().quantity, 2)
+
+    def test_update_more_part_than_available(self):
+        self.client.post(self.url, self.payload, format='json')
+        service = Service.objects.first()
+        payload = {
+            "used_parts": [{
+                "part_id": self.part.id,
+                "part_name": self.part.name,
+                "quantity": 10
+            }]
+        }
+        url = reverse('service_details', kwargs={'service_id': service.id})
+        response = self.client.patch(url, payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(ServicePart.objects.first().quantity_used, 2)
+    
+    def test_delete_part_with_patch(self):
+        self.client.post(self.url, self.payload, format='json')
+        self.part.refresh_from_db()
+        service = Service.objects.first()
+        payload = {"used_parts": []}
+        url = reverse('service_details', kwargs={'service_id': service.id})
+        response = self.client.patch(url, payload, format='json')
+        self.part.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(ServicePart.objects.count(), 0)
+        self.assertEqual(self.part.quantity, 4)
+
+    def test_delete_part_from_service(self):
+        self.client.post(self.url, self.payload, format='json')
+        self.part.refresh_from_db()
+        service = Service.objects.first()
+        self.assertEqual(self.part.quantity, 2)
+        url = reverse('service_details', kwargs={'service_id': service.id})
+        response = self.client.delete(url)
+        self.part.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Service.objects.count(), 0)
+        self.assertEqual(self.part.quantity, 4)

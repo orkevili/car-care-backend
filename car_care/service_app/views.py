@@ -244,6 +244,8 @@ def services(request, vehicle_id):
             used_parts = service_data['used_parts']
             for part in used_parts:
                 part_obj = get_object_or_404(Part, id=part['part_id'])
+                if part['quantity'] < 0: 
+                    return Response({"error": "Error: quantity is greater than parts in stock!"}, status=400)
                 new_service_part = ServicePart(
                     service=new_service,
                     part=part_obj,
@@ -282,7 +284,8 @@ def service_details(request, service_id):
                     existing_sps = {sp.part.id: sp for sp in ServicePart.objects.filter(service=service)}
                     for item in service_data['used_parts']:
                         part_id = item.get('part_id')
-                        if not part_id:
+                        quantity = item.get('quantity')
+                        if not part_id or quantity < 1:
                             raise ValidationError("Error with part data")
                         incoming_qty = int(item.get('quantity', item.get('quantity_used', 0))) 
                         part_obj = get_object_or_404(Part, id=part_id)
