@@ -33,6 +33,6 @@ jobs:
         python manage.py migrate
 
     - name: Run tests
-      working-directory: ./car-care
+      working-directory: ./car_care
       run: |
         python manage.py test
