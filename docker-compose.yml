@@ -1,13 +1,17 @@
 version: '3.8'
 
 services:
+  #Django
   app:
     container_name: django_car_care
     build: .
     restart: always
     env_file:
       - .env
+    networks:
+      - car_care_net
 
+  #Cloudflare Tunnel
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: django_cloudflare
@@ -19,3 +23,9 @@ services:
       - .env
     depends_on:
       - app
+    networks:
+      - car_care_net
+
+networks:
+  car_care_net:
+    external: true
