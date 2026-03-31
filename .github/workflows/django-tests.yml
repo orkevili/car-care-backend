@@ -27,12 +27,12 @@ jobs:
         pip install -r requirements.txt
 
     - name: Database migrations (SQLite)
-      working-directory: ./car-care
+      working-directory: /car-care
       run: |
         python manage.py makemigrations
         python manage.py migrate
 
     - name: Run tests
-      working-directory: ./car_care
+      working-directory: /car_care
       run: |
         python manage.py test
