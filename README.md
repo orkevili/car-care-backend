@@ -98,3 +98,6 @@ Minden végpont az `/api/` prefix alatt érhető el. A legtöbb végpont haszná
 
 A projekt GitHub Actions segítségével, teljesen automatizálva frissül a szerveren (`self-hosted runner`).
 Amikor a `main` ágra push történik, a runner újraépíti a Docker image-et, összegyűjti a statikus fájlokat, és újraindítja a `django_car_care` konténert.
+
+## Adatbázis diagram
+![database](Docs/database_diagram.png)
