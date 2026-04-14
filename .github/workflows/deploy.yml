@@ -2,12 +2,12 @@ name: Django CI/CD with Cloudflare Tunnel
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main"]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main"]
 
 jobs:
-  # 1. Tesztelés a GitHub szerverein
+  # 1. Test on Github servers
   build-and-test:
     runs-on: ubuntu-latest
     env:
@@ -38,41 +38,36 @@ jobs:
       run: |
         python manage.py test
 
-  # 2. Élesítés a te szervereden (Cloudflare Tunnellel)
+  # 2. Deployment (with Cloudflare Tunnel)
   deploy:
-    name: Deploy to Homelab
+    name: Deploy
     needs: build-and-test
     runs-on: self-hosted
     environment: production
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
 
     steps:
-    - name: Kód letöltése a Homelabre
+    - name: Download code to server
       uses: actions/checkout@v4
 
-    - name: Régi konténerek leállítása
+    - name: Stop old containers
       run: docker compose down
 
-    - name: Éles .env fájl generálása
-      # Ne felejtsd el felvenni a PROD_SECRET_KEY és CLOUDFLARE_TUNNEL_TOKEN változókat a GitHub Secrets-be!
+    - name: Generate production .env file
       run: |
         echo "SECRET_KEY=${{ secrets.PROD_SECRET_KEY }}" > .env
         echo "TUNNEL_TOKEN=${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}" >> .env
         echo "DEBUG=False" >> .env
-        # Fontos: Ide a Cloudflare-ben beállított publikus domainedet írd!
         echo "ALLOWED_HOSTS=${{ vars.ALLOWED_HOSTS }}" >> .env
         echo "CORS_ALLOWED_ORIGINS=${{ vars.CORS_ALLOWED_ORIGINS }}" >> .env
 
-    - name: Docker konténer újraépítése és indítása
+    - name: Docker container rebuild and start
       run: |
-        # Elindítja a Django appot és a Cloudflared tunnelt is
         docker compose up -d --build
 
-    - name: Adatbázis migrációk futtatása a futó konténerben
+    - name: Make database migrations on the running container
       run: |
-        # Ellenőrizd, hogy a konténered neve tényleg 'django_car_care'-e a docker-compose.yml-ben!
-        docker exec django_car_care python manage.py migrate
+        docker exec car_care_backend python manage.py migrate
 
-    - name: Felesleges Docker image-ek takarítása
-      # Ez letörli azokat a régi image-eket, amik már nem futnak, így nem telik be a szervered vinyója
+    - name: Clean dangling Docker images
       run: docker image prune -f
