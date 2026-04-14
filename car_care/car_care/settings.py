@@ -36,7 +36,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-raw_csrf_origins = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://shitbox.hu')
+raw_csrf_origins = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost')
 CSRF_TRUSTED_ORIGINS = raw_csrf_origins.split(',')
 
 # Application definition
