@@ -1,9 +1,8 @@
 version: '3.8'
 
 services:
-  #Django
   app:
-    container_name: django_car_care
+    container_name: car_care_backend
     build: .
     restart: always
     env_file:
@@ -11,10 +10,9 @@ services:
     networks:
       - car_care_net
 
-  #Cloudflare Tunnel
   cloudflared:
     image: cloudflare/cloudflared:latest
-    container_name: django_cloudflare
+    container_name: car_care_cloudflare
     restart: always
     command: tunnel --no-autoupdate run
     environment:
